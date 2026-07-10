@@ -1,0 +1,17 @@
+{
+  "name": "synaptoflow-dev",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb"
+  },
+  "forwardPorts": [9002, 8080],
+  "portsAttributes": {
+    "9002": { "label": "DataHub UI" },
+    "8080": { "label": "DataHub GMS / MCP" }
+  },
+  "postCreateCommand": "pip install --user acryl-datahub"
+}
