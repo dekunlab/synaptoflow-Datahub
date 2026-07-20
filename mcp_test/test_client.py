@@ -4,6 +4,9 @@ import os
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+# The exact URN ingest.py printed when it created our shared model group
+MODEL_GROUP_URN = "urn:li:mlModelGroup:(urn:li:dataPlatform:synaptoflow,synaptoflow-population-vector-decoder,PROD)"
+
 
 async def main():
     server_env = {
@@ -24,13 +27,15 @@ async def main():
             await session.initialize()
 
             tools = await session.list_tools()
-            print(f"Connected. {len(tools.tools)} tools available:\n")
-            for t in tools.tools:
-                print(f"  - {t.name}: {t.description}")
+            print(f"Connected. {len(tools.tools)} tools available.\n")
 
-            print("\nCalling 'search' for 'synaptoflow'...\n")
-            result = await session.call_tool("search", {"query": "synaptoflow"})
-            print(result)
+            print("--- Testing 'search' ---")
+            search_result = await session.call_tool("search", {"query": "synaptoflow"})
+            print(search_result)
+
+            print("\n--- Testing 'get_entities' ---")
+            get_result = await session.call_tool("get_entities", {"urns": [MODEL_GROUP_URN]})
+            print(get_result)
 
 
 if __name__ == "__main__":

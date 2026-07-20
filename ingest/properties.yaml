@@ -1,0 +1,17 @@
+- id: io.synaptoflow.angleErrorDegrees
+  qualified_name: io.synaptoflow.angleErrorDegrees
+  type: number
+  cardinality: SINGLE
+  display_name: Angle Error (Degrees)
+  entity_types:
+    - dataset
+  description: "Live decoder angle error in degrees for this patient's raw neural stream, updated by the SynaptoFlow monitoring loop."
+
+- id: io.synaptoflow.klDivergenceScore
+  qualified_name: io.synaptoflow.klDivergenceScore
+  type: number
+  cardinality: SINGLE
+  display_name: KL Divergence Score
+  entity_types:
+    - dataset
+  description: "Live rolling KL divergence between current and calibration-baseline feature distributions for this patient's raw neural stream, updated by the SynaptoFlow monitoring loop."
