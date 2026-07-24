@@ -33,11 +33,8 @@ def dataset_urn(patient_id: str) -> str:
 
 def ensure_tags_exist(gms_url: str, token: str) -> None:
     """
-    Creates the two drift-state tags as real Tag entities, once, before the
-    monitor loop runs. Tags do NOT auto-create on first use in this DataHub
-    version (confirmed by a real error) -- same proven low-level MCP
-    pattern already used successfully elsewhere in this build (MLFeature,
-    MLPrimaryKey, MLModelDeployment all use this exact mechanism).
+    Creates the drift-state tags as DataHub Tag entities before the monitor loop runs.
+    Explicit creation is required prior to applying tags to deployments.
     """
     emitter = DatahubRestEmitter(gms_server=gms_url, token=token)
     tags = [
@@ -53,7 +50,7 @@ def ensure_tags_exist(gms_url: str, token: str) -> None:
 
 
 def raise_incident(gms_url: str, token: str, resource_urn: str, title: str, description: str) -> str:
-    """Calls DataHub's raiseIncident GraphQL mutation directly (no MCP tool exists for this yet)."""
+    """Invokes the DataHub raiseIncident GraphQL mutation."""
     query = """
     mutation raiseIncident($input: RaiseIncidentInput!) {
       raiseIncident(input: $input)
@@ -109,7 +106,7 @@ async def run_monitor():
                 ds_urn = dataset_urn(patient_id)
                 print(f"\n=== {patient_id} ===")
 
-                # Every patient starts at baseline right after calibration -- set that explicitly
+                # Every patient starts at baseline right after calibration
                 await session.call_tool("add_tags", {
                     "tag_urns": ["urn:li:tag:drift-baseline"],
                     "entity_urns": [dep_urn],
@@ -124,8 +121,7 @@ async def run_monitor():
                     window_start = max(0, checkpoint_trial - ROLLING_ERR_WINDOW + 1)
                     rolling_err = pdf["angle_error_deg"].iloc[window_start:checkpoint_trial + 1].mean()
 
-                    # Always refresh the live numbers, every checkpoint -- on the DATASET,
-                    # since Structured Properties don't support MLModelDeployment (see docstring)
+                    # Refresh live metrics on the raw Dataset entity
                     await session.call_tool("add_structured_properties", {
                         "property_values": {
                             ANGLE_PROP_URN: [round(float(rolling_err), 2)],
@@ -158,7 +154,7 @@ async def run_monitor():
                                     ),
                                 )
                                 incident_state[patient_id] = incident_urn
-                                STATE_FILE.write_text(json.dumps(incident_state, indent=2))  # save immediately, not just at the end
+                                STATE_FILE.write_text(json.dumps(incident_state, indent=2))
                                 print(f"  trial {checkpoint_trial}: DRIFT DETECTED -> incident {incident_urn}")
                         else:
                             await session.call_tool("add_tags", {

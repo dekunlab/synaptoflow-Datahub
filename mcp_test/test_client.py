@@ -4,7 +4,7 @@ import os
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-# The exact URN ingest.py printed when it created our shared model group
+
 MODEL_GROUP_URN = "urn:li:mlModelGroup:(urn:li:dataPlatform:synaptoflow,synaptoflow-population-vector-decoder,PROD)"
 
 

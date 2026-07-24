@@ -1,0 +1,86 @@
+{
+  "patient_id": "patient_01",
+  "window_trials": 60,
+  "window_trial_range": [
+    240,
+    299
+  ],
+  "channels": [
+    {
+      "channel": 0,
+      "current_deployed_direction_deg": 5.48,
+      "refit_direction_deg": 4.26,
+      "drift_deg": -1.21,
+      "fit_amplitude": 4.736,
+      "fit_r_squared": 0.977,
+      "proposed_direction_deg_default_strength": 4.26
+    },
+    {
+      "channel": 1,
+      "current_deployed_direction_deg": 43.78,
+      "refit_direction_deg": 43.89,
+      "drift_deg": 0.12,
+      "fit_amplitude": 3.071,
+      "fit_r_squared": 0.933,
+      "proposed_direction_deg_default_strength": 43.89
+    },
+    {
+      "channel": 2,
+      "current_deployed_direction_deg": 97.17,
+      "refit_direction_deg": 97.71,
+      "drift_deg": 0.53,
+      "fit_amplitude": 5.431,
+      "fit_r_squared": 0.972,
+      "proposed_direction_deg_default_strength": 97.71
+    },
+    {
+      "channel": 3,
+      "current_deployed_direction_deg": 138.95,
+      "refit_direction_deg": 139.03,
+      "drift_deg": 0.09,
+      "fit_amplitude": 4.936,
+      "fit_r_squared": 0.97,
+      "proposed_direction_deg_default_strength": 139.03
+    },
+    {
+      "channel": 4,
+      "current_deployed_direction_deg": 171.88,
+      "refit_direction_deg": 170.97,
+      "drift_deg": -0.91,
+      "fit_amplitude": 5.071,
+      "fit_r_squared": 0.972,
+      "proposed_direction_deg_default_strength": 170.97
+    },
+    {
+      "channel": 5,
+      "current_deployed_direction_deg": 234.51,
+      "refit_direction_deg": 235.61,
+      "drift_deg": 1.09,
+      "fit_amplitude": 3.886,
+      "fit_r_squared": 0.958,
+      "proposed_direction_deg_default_strength": 235.61
+    },
+    {
+      "channel": 6,
+      "current_deployed_direction_deg": 275.22,
+      "refit_direction_deg": 275.63,
+      "drift_deg": 0.41,
+      "fit_amplitude": 6.034,
+      "fit_r_squared": 0.979,
+      "proposed_direction_deg_default_strength": 275.63
+    },
+    {
+      "channel": 7,
+      "current_deployed_direction_deg": 320.72,
+      "refit_direction_deg": 319.87,
+      "drift_deg": -0.86,
+      "fit_amplitude": 5.789,
+      "fit_r_squared": 0.986,
+      "proposed_direction_deg_default_strength": 319.87
+    }
+  ],
+  "mean_abs_drift_deg": 0.65,
+  "max_abs_drift_deg": 1.21,
+  "default_recal_strength_pct": 100.0,
+  "low_confidence_channels": []
+}

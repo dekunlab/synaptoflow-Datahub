@@ -8,14 +8,14 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 N_CHANNELS = 8            
-                          
+                         
 N_PATIENTS = 12          
 N_TRIALS = 300            
 CALIBRATION_TRIALS = 60   
 KL_WINDOW = 50            
 COV_SHRINKAGE = 0.15      
-                          
-                          
+                         
+                         
 TARGET_DIRECTIONS_DEG = np.array([0, 45, 90, 135, 180, 225, 270, 315])  
 
 RNG_SEED = 42
@@ -27,8 +27,8 @@ class PatientConfig:
     preferred_directions_deg: np.ndarray   
     baseline_rate: np.ndarray              
     amplitude: np.ndarray                 
-    noise_std: float                       
-    drift_severity_deg: float              
+    noise_std: float                      
+    drift_severity_deg: float             
 
 
 def make_patient(patient_id: str, drift_severity_deg: float, rng: np.random.Generator) -> PatientConfig:
@@ -131,7 +131,7 @@ def simulate_patient_session(patient: PatientConfig, rng: np.random.Generator) -
             current_cov = np.cov(current_window, rowvar=False)
             kl = multivariate_gaussian_kl(current_mean, current_cov, baseline_mean, baseline_cov)
 
-        rows.append({
+        row = {
             "patient_id": patient.patient_id,
             "trial": trial,
             "true_angle_deg": true_angle,
@@ -139,7 +139,10 @@ def simulate_patient_session(patient: PatientConfig, rng: np.random.Generator) -
             "angle_error_deg": err,
             "kl_divergence": kl,
             "mean_abs_channel_drift_deg": float(np.mean(np.abs(drift_vec))),
-        })
+        }
+        for ch in range(N_CHANNELS):
+            row[f"channel_{ch}_feature"] = float(features[ch])
+        rows.append(row)
 
     return pd.DataFrame(rows)
 
@@ -155,11 +158,13 @@ def main():
     assert len(drift_severities) == N_PATIENTS
 
     all_sessions = []
+    calibration_params = {}
     for i, severity in enumerate(drift_severities):
         patient_id = f"patient_{i+1:02d}"
         patient = make_patient(patient_id, severity, rng)
         session_df = simulate_patient_session(patient, rng)
         all_sessions.append(session_df)
+        calibration_params[patient_id] = patient.preferred_directions_deg.tolist()
 
     full_df = pd.concat(all_sessions, ignore_index=True)
 
@@ -167,6 +172,11 @@ def main():
     out_dir.mkdir(exist_ok=True)
     out_path = out_dir / "telemetry.csv"
     full_df.to_csv(out_path, index=False)
+
+    calib_path = out_dir / "calibration_params.json"
+    import json
+    calib_path.write_text(json.dumps(calibration_params, indent=2))
+    print(f"Saved original per-patient decoder calibration params to {calib_path}")
 
     print(f"Simulated {N_PATIENTS} patients x {N_TRIALS} trials. Saved to {out_path}\n")
     print(f"{'patient_id':<12} {'severity':<9} {'start_err':<10} {'end_err':<9} {'end_kl':<8}")
