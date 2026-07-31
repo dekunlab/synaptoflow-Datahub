@@ -23,9 +23,12 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from openai import OpenAI
 
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent.parent / ".env")
+
 PLATFORM = "synaptoflow"
-MONITOR_DIR = Path(__file__).parent.parent / "monitor"
-STATE_FILE = MONITOR_DIR / "incident_state.json"
+STATE_DIR = Path(__file__).parent.parent / "state"
+STATE_FILE = STATE_DIR / "incident_state.json"
 
 
 def model_urn(patient_id: str) -> str:
@@ -94,8 +97,8 @@ numbers -- only reference the telemetry summary above."""
 
 def save_draft(patient_id: str, diagnosis: str) -> Path:
     """Saves the generated diagnosis to a staged text file for the Cockpit to read."""
-    MONITOR_DIR.mkdir(parents=True, exist_ok=True)
-    draft_path = MONITOR_DIR / f"diagnostic_draft_{patient_id}.txt"
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    draft_path = STATE_DIR / f"diagnostic_draft_{patient_id}.txt"
     draft_path.write_text(diagnosis, encoding="utf-8")
     return draft_path
 

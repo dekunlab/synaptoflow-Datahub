@@ -3,16 +3,16 @@ agents/calibration_agent.py
 
 Calibration Agent for SynaptoFlow.
 
-Drafts a recalibration proposal for a patient with an open drift Incident. 
-For each of the 8 channels, it runs a recursive least squares (RLS) fit -- 
-processed trial-by-trial -- of the channel's raw `channel_N_feature` readings 
-against the known `true_angle_deg` over a fresh calibration window. This recovers 
-the channel's current (drifted) preferred direction. The result is compared 
-against the currently deployed direction to calculate drift, and blended into 
+Drafts a recalibration proposal for a patient with an open drift Incident.
+For each channel, it runs a recursive least squares (RLS) fit -- processed
+trial-by-trial -- of the channel's raw `channel_N_feature` readings against
+the known `true_angle_deg` over a fresh calibration window. This recovers
+the channel's current (drifted) preferred direction. The result is compared
+against the currently deployed direction to calculate drift, and blended into
 a proposed new calibration at a default 100% recalibration strength.
 
-Note: This script only computes and stages a draft proposal to 
-`monitor/calibration_draft_<patient_id>.json`. It does not deploy or write 
+Note: This script only computes and stages a draft proposal to
+`state/calibration_draft_<patient_id>.json`. It does not deploy or write
 to DataHub. Deployment is handled separately after clinical review.
 
 --- The Regression Model ---
@@ -25,8 +25,8 @@ Using cos(a - b) = cos(a)cos(b) + sin(a)sin(b), that's linear in three unknowns:
     feature = c0 + c1*cos(true_angle) + c2*sin(true_angle) + noise
     where c1 = amplitude*cos(preferred_dir), c2 = amplitude*sin(preferred_dir)
 
-Fitting [1, cos(true_angle), sin(true_angle)] -> feature recovers 
-preferred_dir = atan2(c2, c1) directly. The fit recovers its own baseline (c0) 
+Fitting [1, cos(true_angle), sin(true_angle)] -> feature recovers
+preferred_dir = atan2(c2, c1) directly. The fit recovers its own baseline (c0)
 and amplitude (hypot(c1, c2)) from the fresh window alone.
 """
 
@@ -40,12 +40,16 @@ import pandas as pd
 REPO_ROOT = Path(__file__).parent.parent
 TELEMETRY_PATH = REPO_ROOT / "sim" / "output" / "telemetry.csv"
 CALIB_PARAMS_PATH = REPO_ROOT / "sim" / "output" / "calibration_params.json"
-DRAFT_OUT_DIR = REPO_ROOT / "monitor"
+DRAFT_OUT_DIR = REPO_ROOT / "state"
 
-N_CHANNELS = 8
 CALIBRATION_WINDOW_TRIALS = 60  # matches simulator's own CALIBRATION_TRIALS
 DEFAULT_RECAL_STRENGTH_PCT = 100.0
 LOW_CONFIDENCE_R2_THRESHOLD = 0.5
+
+
+def infer_n_channels(window: pd.DataFrame) -> int:
+    """Reads channel count from the data itself rather than assuming a fixed number."""
+    return sum(1 for c in window.columns if c.startswith("channel_") and c.endswith("_feature"))
 
 
 def load_current_calibration(patient_id: str) -> np.ndarray:
@@ -122,7 +126,7 @@ def rls_fit_channel(true_angle_deg: np.ndarray, channel_feature: np.ndarray, for
 def blend_directions(current_deg: np.ndarray, refit_deg: np.ndarray, strength_pct: float) -> np.ndarray:
     """
     Blends currently-deployed and freshly-refit per-channel directions by
-    recalibration strength (0-100%). 0% = keep the current decoder untouched. 
+    recalibration strength (0-100%). 0% = keep the current decoder untouched.
     100% = fully adopt the refit. Blends along the shortest path around the circle.
     """
     strength = np.clip(strength_pct, 0.0, 100.0) / 100.0
@@ -140,13 +144,19 @@ def draft_calibration_proposal(patient_id: str, window_trials: int = CALIBRATION
     """
     current = load_current_calibration(patient_id)
     window = load_calibration_window(patient_id, window_trials)
+    n_channels = infer_n_channels(window)
+    if len(current) != n_channels:
+        raise ValueError(
+            f"{patient_id}: calibration_params.json has {len(current)} channels but "
+            f"telemetry has {n_channels} channel_N_feature columns -- these must match."
+        )
 
-    refit_directions = np.zeros(N_CHANNELS)
-    amplitudes = np.zeros(N_CHANNELS)
-    r_squared = np.zeros(N_CHANNELS)
+    refit_directions = np.zeros(n_channels)
+    amplitudes = np.zeros(n_channels)
+    r_squared = np.zeros(n_channels)
 
     true_angles = window["true_angle_deg"].to_numpy()
-    for ch in range(N_CHANNELS):
+    for ch in range(n_channels):
         col = f"channel_{ch}_feature"
         direction, amp, _baseline, r2 = rls_fit_channel(true_angles, window[col].to_numpy())
         refit_directions[ch] = direction
@@ -157,7 +167,7 @@ def draft_calibration_proposal(patient_id: str, window_trials: int = CALIBRATION
     proposed = blend_directions(current, refit_directions, DEFAULT_RECAL_STRENGTH_PCT)
 
     low_confidence_channels = [
-        ch for ch in range(N_CHANNELS) if r_squared[ch] < LOW_CONFIDENCE_R2_THRESHOLD
+        ch for ch in range(n_channels) if r_squared[ch] < LOW_CONFIDENCE_R2_THRESHOLD
     ]
 
     return {
@@ -174,7 +184,7 @@ def draft_calibration_proposal(patient_id: str, window_trials: int = CALIBRATION
                 "fit_r_squared": round(float(r_squared[ch]), 3),
                 "proposed_direction_deg_default_strength": round(float(proposed[ch]), 2),
             }
-            for ch in range(N_CHANNELS)
+            for ch in range(n_channels)
         ],
         "mean_abs_drift_deg": round(float(np.mean(np.abs(drift_vs_current))), 2),
         "max_abs_drift_deg": round(float(np.max(np.abs(drift_vs_current))), 2),

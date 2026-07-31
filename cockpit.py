@@ -25,8 +25,8 @@ from pathlib import Path
 import streamlit as st
 
 REPO_ROOT = Path(__file__).parent
-MONITOR_DIR = REPO_ROOT / "monitor"
-INCIDENT_STATE_PATH = MONITOR_DIR / "incident_state.json"
+STATE_DIR = REPO_ROOT / "state"
+INCIDENT_STATE_PATH = STATE_DIR / "incident_state.json"
 
 N_CHANNELS = 8
 LOW_CONFIDENCE_R2_THRESHOLD = 0.5
@@ -37,15 +37,15 @@ LOW_CONFIDENCE_R2_THRESHOLD = 0.5
 # --------------------------------------------------------------------------
 
 def diagnostic_draft_path(patient_id: str) -> Path:
-    return MONITOR_DIR / f"diagnostic_draft_{patient_id}.txt"
+    return STATE_DIR / f"diagnostic_draft_{patient_id}.txt"
 
 
 def calibration_draft_path(patient_id: str) -> Path:
-    return MONITOR_DIR / f"calibration_draft_{patient_id}.json"
+    return STATE_DIR / f"calibration_draft_{patient_id}.json"
 
 
 def approved_path(patient_id: str) -> Path:
-    return MONITOR_DIR / f"approved_{patient_id}.json"
+    return STATE_DIR / f"approved_{patient_id}.json"
 
 
 def load_incident_queue() -> dict:
@@ -76,7 +76,7 @@ def load_approved(patient_id: str) -> dict | None:
 
 
 def save_approved(payload: dict) -> Path:
-    MONITOR_DIR.mkdir(exist_ok=True)
+    STATE_DIR.mkdir(exist_ok=True)
     path = approved_path(payload["patient_id"])
     path.write_text(json.dumps(payload, indent=2))
     return path
@@ -394,7 +394,7 @@ def render_patient(patient_id: str, incident_urn: str) -> None:
             key=notes_key,
             height=160,
             label_visibility="collapsed",
-            disabled=diagnosis_text is None,
+            disabled=diagnosis_text is None or already_reviewed is not None,
         )
 
     st.markdown("<hr/>", unsafe_allow_html=True)
@@ -415,13 +415,24 @@ def render_patient(patient_id: str, incident_urn: str) -> None:
 
     strength_key = f"strength_{patient_id}"
     default_strength = calibration.get("default_recal_strength_pct", 100.0)
-    strength_pct = st.slider(
-        "Recalibration strength",
-        min_value=0,
-        max_value=100,
-        value=int(default_strength),
-        key=strength_key,
-    )
+
+    if already_reviewed is not None:
+        strength_pct = already_reviewed.get("recalibration_strength_pct")
+        if strength_pct is None:
+            strength_pct = already_reviewed.get("reviewed_proposal", {}).get("recalibration_strength_pct", 0)
+        st.markdown(
+            f'<div class="panel-meta mono">Recalibration strength: {strength_pct}% '
+            f'(locked &mdash; already {already_reviewed["status"]})</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        strength_pct = st.slider(
+            "Recalibration strength",
+            min_value=0,
+            max_value=100,
+            value=int(default_strength),
+            key=strength_key,
+        )
 
     scaled_mean = calibration["mean_abs_drift_deg"] * strength_pct / 100.0
     scaled_max = calibration["max_abs_drift_deg"] * strength_pct / 100.0
@@ -449,46 +460,65 @@ def render_patient(patient_id: str, incident_urn: str) -> None:
     st.markdown("<hr/>", unsafe_allow_html=True)
     st.markdown('<div class="eyebrow">// Review</div>', unsafe_allow_html=True)
 
+    def channels_at(strength: float) -> list[dict]:
+        return [
+            {
+                "channel": ch["channel"],
+                "current_deployed_direction_deg": ch["current_deployed_direction_deg"],
+                "refit_direction_deg": ch["refit_direction_deg"],
+                "proposed_direction_deg": round(
+                    proposed_direction(ch["current_deployed_direction_deg"], ch["drift_deg"], strength), 2
+                ),
+            }
+            for ch in calibration["channels"]
+        ]
+
     def build_payload(status: str) -> dict:
-        return {
+        payload = {
             "patient_id": patient_id,
             "incident_urn": incident_urn,
             "status": status,
             "diagnosis_text": diagnosis_text,
             "clinical_notes": st.session_state.get(notes_key, ""),
-            "recalibration_strength_pct": default_strength if status == "approved_as_is" else strength_pct,
-            "channels": [
-                {
-                    "channel": ch["channel"],
-                    "current_deployed_direction_deg": ch["current_deployed_direction_deg"],
-                    "refit_direction_deg": ch["refit_direction_deg"],
-                    "proposed_direction_deg": round(
-                        proposed_direction(
-                            ch["current_deployed_direction_deg"],
-                            ch["drift_deg"],
-                            default_strength if status == "approved_as_is" else strength_pct,
-                        ),
-                        2,
-                    ),
-                }
-                for ch in calibration["channels"]
-            ],
             "reviewed_at": datetime.now(timezone.utc).isoformat(),
         }
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("Approve As-Is", key=f"approve_as_is_{patient_id}", use_container_width=True):
-            save_approved(build_payload("approved_as_is"))
-            st.rerun()
-    with col2:
-        if st.button("Approve With Edits", key=f"approve_edits_{patient_id}", use_container_width=True):
-            save_approved(build_payload("approved_with_edits"))
-            st.rerun()
-    with col3:
-        if st.button("Reject", key=f"reject_{patient_id}", use_container_width=True):
-            save_approved(build_payload("rejected"))
-            st.rerun()
+        if status == "rejected":
+            # Kept as a snapshot of what was on screen at the moment of
+            # rejection, for the audit trail -- not an instruction. Nested
+            # separately from the top-level recalibration_strength_pct and
+            # channels fields the approved statuses use, so nothing here
+            # can be mistaken for a value to deploy.
+            payload["reviewed_proposal"] = {
+                "recalibration_strength_pct": strength_pct,
+                "channels": channels_at(strength_pct),
+            }
+            return payload
+
+        applied_strength = default_strength if status == "approved_as_is" else strength_pct
+        payload["recalibration_strength_pct"] = applied_strength
+        payload["channels"] = channels_at(applied_strength)
+        return payload
+
+    if already_reviewed is None:
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("Approve As-Is", key=f"approve_as_is_{patient_id}", use_container_width=True):
+                save_approved(build_payload("approved_as_is"))
+                st.rerun()
+        with col2:
+            if st.button("Approve With Edits", key=f"approve_edits_{patient_id}", use_container_width=True):
+                save_approved(build_payload("approved_with_edits"))
+                st.rerun()
+        with col3:
+            if st.button("Reject", key=f"reject_{patient_id}", use_container_width=True):
+                save_approved(build_payload("rejected"))
+                st.rerun()
+    else:
+        st.markdown(
+            '<div class="panel-meta mono">Decision recorded &mdash; no further action available for this incident.</div>',
+            unsafe_allow_html=True,
+        )
 
 
 def main() -> None:

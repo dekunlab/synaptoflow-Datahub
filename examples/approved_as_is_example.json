@@ -1,0 +1,59 @@
+{
+  "patient_id": "patient_07",
+  "incident_urn": "urn:li:incident:bdbf2d87-d05b-439e-a299-a8a75fc82383",
+  "status": "approved_as_is",
+  "diagnosis_text": "During the sessions with patient_07, the brain-computer interface (BCI) system appears to be experiencing signal drift, indicating a gradual change in the recorded brain activity patterns. This is suggested by the large angle error (max=12.5 degrees) over the last 50 trials, which suggests that the system's predictions are not accurately reflecting the patient's actual mental states. The elevated KL divergence (mean=0.58) suggests that the model's internal representation of the data is also shifting, further supporting the need for recalibration to maintain accurate decoding. As a result, recalibration is proposed to adapt the system to the changing brain activity patterns and ensure the BCI provides reliable and accurate results.",
+  "clinical_notes": "During the sessions with patient_07, the brain-computer interface (BCI) system appears to be experiencing signal drift, indicating a gradual change in the recorded brain activity patterns. This is suggested by the large angle error (max=12.5 degrees) over the last 50 trials, which suggests that the system's predictions are not accurately reflecting the patient's actual mental states. The elevated KL divergence (mean=0.58) suggests that the model's internal representation of the data is also shifting, further supporting the need for recalibration to maintain accurate decoding. As a result, recalibration is proposed to adapt the system to the changing brain activity patterns and ensure the BCI provides reliable and accurate results.",
+  "recalibration_strength_pct": 100.0,
+  "channels": [
+    {
+      "channel": 0,
+      "current_deployed_direction_deg": 7.67,
+      "refit_direction_deg": 17.48,
+      "proposed_direction_deg": 17.47
+    },
+    {
+      "channel": 1,
+      "current_deployed_direction_deg": 54.82,
+      "refit_direction_deg": 47.33,
+      "proposed_direction_deg": 47.34
+    },
+    {
+      "channel": 2,
+      "current_deployed_direction_deg": 89.72,
+      "refit_direction_deg": 103.57,
+      "proposed_direction_deg": 103.57
+    },
+    {
+      "channel": 3,
+      "current_deployed_direction_deg": 134.2,
+      "refit_direction_deg": 120.23,
+      "proposed_direction_deg": 120.23
+    },
+    {
+      "channel": 4,
+      "current_deployed_direction_deg": 176.61,
+      "refit_direction_deg": 178.68,
+      "proposed_direction_deg": 178.68
+    },
+    {
+      "channel": 5,
+      "current_deployed_direction_deg": 230.58,
+      "refit_direction_deg": 241.23,
+      "proposed_direction_deg": 241.23
+    },
+    {
+      "channel": 6,
+      "current_deployed_direction_deg": 273.11,
+      "refit_direction_deg": 284.32,
+      "proposed_direction_deg": 284.32
+    },
+    {
+      "channel": 7,
+      "current_deployed_direction_deg": 312.27,
+      "refit_direction_deg": 298.62,
+      "proposed_direction_deg": 298.63
+    }
+  ],
+  "reviewed_at": "2026-07-25T09:52:56.239596+00:00"
+}

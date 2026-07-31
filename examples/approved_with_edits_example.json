@@ -1,0 +1,59 @@
+{
+  "patient_id": "patient_08",
+  "incident_urn": "urn:li:incident:6f4d1bdb-9553-4ef3-afdd-1b648048de15",
+  "status": "approved_with_edits",
+  "diagnosis_text": "Based on the telemetry data, it appears that patient_08's BCI system is experiencing drift, resulting in a significant increase in angle error over the last 50 trials. This suggests that the system's calibration is not accurately reflecting the patient's brain activity, leading to decreased performance. The KL divergence values are also higher than normal, indicating a change in the patient's neural patterns that the system is trying to adapt to. As a result, recalibration is likely being proposed to update the system's model and improve accuracy.",
+  "clinical_notes": "Based on the telemetry data, it appears that patient_08's BCI system is experiencing drift, resulting in a significant increase in angle error over the last 50 trials. This suggests that the system's calibration is not accurately reflecting the patient's brain activity, leading to decreased performance. The KL divergence values are also higher than normal, indicating a change in the patient's neural patterns that the system is trying to adapt to. As a result, recalibration is likely being proposed to update the system's model and improve accuracy.",
+  "recalibration_strength_pct": 89,
+  "channels": [
+    {
+      "channel": 0,
+      "current_deployed_direction_deg": 352.17,
+      "refit_direction_deg": 6.97,
+      "proposed_direction_deg": 5.34
+    },
+    {
+      "channel": 1,
+      "current_deployed_direction_deg": 39.33,
+      "refit_direction_deg": 39.83,
+      "proposed_direction_deg": 39.77
+    },
+    {
+      "channel": 2,
+      "current_deployed_direction_deg": 84.27,
+      "refit_direction_deg": 85.79,
+      "proposed_direction_deg": 85.62
+    },
+    {
+      "channel": 3,
+      "current_deployed_direction_deg": 137.44,
+      "refit_direction_deg": 153.18,
+      "proposed_direction_deg": 151.45
+    },
+    {
+      "channel": 4,
+      "current_deployed_direction_deg": 184.18,
+      "refit_direction_deg": 187.25,
+      "proposed_direction_deg": 186.91
+    },
+    {
+      "channel": 5,
+      "current_deployed_direction_deg": 231.75,
+      "refit_direction_deg": 212.46,
+      "proposed_direction_deg": 214.58
+    },
+    {
+      "channel": 6,
+      "current_deployed_direction_deg": 278.0,
+      "refit_direction_deg": 265.89,
+      "proposed_direction_deg": 267.22
+    },
+    {
+      "channel": 7,
+      "current_deployed_direction_deg": 322.5,
+      "refit_direction_deg": 325.7,
+      "proposed_direction_deg": 325.35
+    }
+  ],
+  "reviewed_at": "2026-07-25T10:11:39.925130+00:00"
+}

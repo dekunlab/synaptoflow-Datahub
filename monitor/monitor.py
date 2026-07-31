@@ -11,6 +11,9 @@ from datahub.emitter.mcp import MetadataChangeProposalWrapper
 from datahub.emitter.rest_emitter import DatahubRestEmitter
 from datahub.metadata.schema_classes import TagPropertiesClass
 
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent.parent / ".env")
+
 PLATFORM = "synaptoflow"
 KL_THRESHOLD = 0.5
 ANGLE_ERROR_THRESHOLD = 11.0
@@ -20,7 +23,8 @@ ROLLING_ERR_WINDOW = 20
 ANGLE_PROP_URN = "urn:li:structuredProperty:io.synaptoflow.angleErrorDegrees"
 KL_PROP_URN = "urn:li:structuredProperty:io.synaptoflow.klDivergenceScore"
 
-STATE_FILE = Path(__file__).parent / "incident_state.json"
+STATE_FILE = Path(__file__).parent.parent / "state" / "incident_state.json"
+STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 
 def deployment_urn(patient_id: str) -> str:

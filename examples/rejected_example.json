@@ -1,0 +1,61 @@
+{
+  "patient_id": "patient_09",
+  "incident_urn": "urn:li:incident:c6327494-ae78-48d5-a570-87ed049a1697",
+  "status": "rejected",
+  "diagnosis_text": "Patient 09's brain-computer interface (BCI) sensor is likely experiencing a signal drift, which means the sensor's readings are slowly losing accuracy over time. This is indicated by an angle error of up to 26.1 degrees in some trials, which is significantly higher than expected. The KL divergence value of around 1.4 suggests that the sensor's signal is becoming increasingly mismatched with the patient's actual neural activity patterns, further supporting the need for recalibration. As a result, recalibration is being proposed to restore the sensor's accuracy and reliability.",
+  "clinical_notes": "Patient 09's brain-computer interface (BCI) sensor is likely experiencing a signal drift, which means the sensor's readings are slowly losing accuracy over time. This is indicated by an angle error of up to 26.1 degrees in some trials, which is significantly higher than expected. The KL divergence value of around 1.4 suggests that the sensor's signal is becoming increasingly mismatched with the patient's actual neural activity patterns, further supporting the need for recalibration. As a result, recalibration is being proposed to restore the sensor's accuracy and reliability.",
+  "reviewed_at": "2026-07-27T00:58:40.867647+00:00",
+  "reviewed_proposal": {
+    "recalibration_strength_pct": 100,
+    "channels": [
+      {
+        "channel": 0,
+        "current_deployed_direction_deg": 0.19,
+        "refit_direction_deg": 334.15,
+        "proposed_direction_deg": 334.16
+      },
+      {
+        "channel": 1,
+        "current_deployed_direction_deg": 35.96,
+        "refit_direction_deg": 36.11,
+        "proposed_direction_deg": 36.1
+      },
+      {
+        "channel": 2,
+        "current_deployed_direction_deg": 88.21,
+        "refit_direction_deg": 48.53,
+        "proposed_direction_deg": 48.53
+      },
+      {
+        "channel": 3,
+        "current_deployed_direction_deg": 144.2,
+        "refit_direction_deg": 132.53,
+        "proposed_direction_deg": 132.53
+      },
+      {
+        "channel": 4,
+        "current_deployed_direction_deg": 184.78,
+        "refit_direction_deg": 186.21,
+        "proposed_direction_deg": 186.21
+      },
+      {
+        "channel": 5,
+        "current_deployed_direction_deg": 216.37,
+        "refit_direction_deg": 202.88,
+        "proposed_direction_deg": 202.87
+      },
+      {
+        "channel": 6,
+        "current_deployed_direction_deg": 273.76,
+        "refit_direction_deg": 264.71,
+        "proposed_direction_deg": 264.72
+      },
+      {
+        "channel": 7,
+        "current_deployed_direction_deg": 308.92,
+        "refit_direction_deg": 336.56,
+        "proposed_direction_deg": 336.56
+      }
+    ]
+  }
+}
