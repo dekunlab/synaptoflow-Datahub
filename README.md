@@ -10,7 +10,6 @@
 
 A BCI decoder reads neural signal and translates it into intent — a cursor movement, a cup being reached for. Every decoder drifts: the tissue around the electrode shifts, the signal changes, and the mapping the decoder was calibrated on stops being accurate. SynaptoFlow is an agent cascade that watches for that drift, diagnoses it with real DataHub context, drafts a statistically grounded recalibration, and stages it for a clinician to approve — built with the same safety posture a real clinical deployment would require: nothing is ever written to the decoder without an explicit human decision. Every step of the cascade reads and writes through DataHub itself — the incident is a real DataHub Incident, the diagnosis is drafted from real DataHub lineage, and the final decision is written back as a real Document any future agent or clinician can read, so context accumulates instead of evaporating after each session.
 
-Repo: **https://github.com/dekunlab/synaptoflow-Datahub**
 
 ---
 
@@ -123,62 +122,100 @@ The incident was independently confirmed resolved in the DataHub UI as well.
 
 This runs against a real, self-hosted DataHub instance — the `.devcontainer/` config (4 CPU / 16GB RAM, Docker-in-Docker) sets one up automatically if you're using a Codespace; adjust accordingly if running locally with your own Docker.
 
+Steps 1–11 below all run in the **same terminal** — several of them need real credentials in the shell environment, and that only persists within one terminal session. Steps 12–15 each get their own terminal, since they're long-running processes left open.
+
+**1. Clone and install**
 ```bash
-# 1. Clone and install
 git clone https://github.com/dekunlab/synaptoflow-Datahub.git
 cd synaptoflow-Datahub
 pip install -r requirements.txt
+```
 
-# 2. Start a local DataHub instance
+**2. Confirm `uvx` is available** — every agent shells out to it to run the MCP Server
+```bash
+uvx --version
+```
+If this fails with `command not found`, run `export PATH=$HOME/.local/bin:$PATH` once in this terminal, then try again. (This is fixed permanently for every future terminal via `postCreateCommand` — see the note at the end of this section if you're customizing the devcontainer yourself.)
+
+**3. Start a local DataHub instance**
+```bash
 datahub docker quickstart
+```
 
-# 3. Enable token-based authentication (off by default on a fresh install)
+**4. Enable token-based authentication** — off by default on a fresh install
+```bash
 datahub docker quickstart --stop
-# Edit ~/.datahub/quickstart/docker-compose.yml, adding this line under both
-# the datahub-gms-quickstart and datahub-frontend-quickstart services:
-#   METADATA_SERVICE_AUTH_ENABLED=true
+```
+Edit `~/.datahub/quickstart/docker-compose.yml`: find `METADATA_SERVICE_AUTH_ENABLED` under the `datahub-gms-quickstart` service — it's already there, just set to `false` — and change it to `true`. Add the same line under the `frontend-quickstart` service (note: not `datahub-frontend-quickstart`, that name doesn't exist in the generated compose file).
+```bash
 datahub docker quickstart --quickstart-compose-file ~/.datahub/quickstart/docker-compose.yml
+```
 
-# 4. Generate a Personal Access Token
-# DataHub UI (http://localhost:9002) -> Settings -> Access Tokens -> Generate new token
+**5. Generate a Personal Access Token**
 
-# 5. Configure secrets
+DataHub UI (`http://localhost:9002`) → Settings → Access Tokens → Generate new token.
+
+**6. Configure secrets**
+```bash
 cp .env.example .env
-# edit .env with the token from step 4 and your GROQ_API_KEY
-# Groq's free tier takes under a minute to sign up for at console.groq.com
+```
+Edit `.env` with the token from step 5 and your `GROQ_API_KEY` (Groq's free tier takes under a minute to sign up for at console.groq.com).
 
-# 6. Load .env into your shell (needed by the datahub CLI in the next steps, separately from the Python scripts, which load it themselves)
+**7. Load `.env` into this terminal and initialize the DataHub CLI**
+```bash
 set -a; source .env; set +a
+datahub init
+```
+`datahub init` picks up the values you just exported and writes them to `~/.datahubenv` — the `datahub` CLI (used in the next step and step 9) reads from there, not from `.env` directly.
 
-# 7. Register the structured property definitions this project uses
+**8. Register the structured property definitions this project uses**
+```bash
 datahub properties upsert -f ingest/properties.yaml
+```
 
-# 8. Generate the simulated telemetry (fixed seed — always produces identical output)
+**9. Generate the simulated telemetry** — fixed seed, always produces identical output
+```bash
 python3 sim/simulator.py
+```
 
-# 9. Populate DataHub with the base entities — datasets, features, models, deployments
+**10. Populate DataHub with the base entities** — datasets, features, models, deployments
+```bash
 python3 ingest/ingest.py
+```
 
-# 10. Establish real lineage (dataset -> calibration run -> model)
+**11. Establish real lineage** (dataset → calibration run → model), then sanity check everything connected
+```bash
 python3 ingest/add_training_runs.py
-
-# 11. Optional sanity check that everything above actually connected correctly
 python3 mcp_test/test_client.py
+```
+`mcp_test/test_client.py` should print `Connected. N tools available.` followed by real search results — not an error.
 
-# 12. Start the two background watchers, each in its own terminal, and leave them running
+**12–13. Start the two background watchers, each in its own new terminal, and leave them running**
+```bash
 python3 agents/run_cascade.py
+```
+```bash
 python3 agents/deployment_agent.py
+```
 
-# 13. Start the review UI
+**14. Start the review UI, in another new terminal**
+```bash
 streamlit run cockpit.py
+```
 
-# 14. Trigger a real drift incident, in a separate terminal
+**15. Trigger a real drift incident, in one more terminal**
+```bash
 python3 monitor/monitor.py
 ```
 
-Within a few seconds of step 14, the already-running `run_cascade.py` terminal wakes up on its own and stages a diagnosis and calibration proposal. Open the cockpit, review it, and click Approve or Reject — `deployment_agent.py` reacts the same way, unattended.
+Within a few seconds of step 15, the already-running `run_cascade.py` terminal (step 12) wakes up on its own and stages a diagnosis and calibration proposal. Open the cockpit, review it, and click Approve or Reject — `deployment_agent.py` reacts the same way, unattended. Once a patient shows `REVIEWED` in the cockpit, its slider and buttons lock into a static summary — that's intentional (see [Architecture](#architecture)), not a bug.
 
 `telemetry.csv` is entirely simulated by `sim/simulator.py`, using a fixed random seed so every run reproduces identical output. Swapping in real device telemetry would only ever touch that one file's data and the ingestion step's inputs — nothing downstream of it knows or cares where the numbers came from.
+
+If you're customizing `.devcontainer/devcontainer.json` yourself, the `uvx`-on-PATH fix from step 2 can be made permanent for every future terminal by changing `postCreateCommand` to:
+```json
+"postCreateCommand": "pip install --user -r requirements.txt && echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc"
+```
 
 ---
 
