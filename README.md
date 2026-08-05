@@ -37,6 +37,7 @@ A BCI decoder reads neural signal and translates it into intent — a cursor mov
 - **Runs on its own between the two moments that need a human.** Two watcher processes react automatically to new incidents and new approvals. The only manual actions anywhere in the system are triggering a new patient session and making the clinical call.
 
 ---
+![SynaptoFlow Cockpit](examples/cockpit_image.png)
 
 ## Architecture
 
@@ -74,7 +75,7 @@ graph TD
     Calib -->|reads baseline| CalibFile
     Calib -->|"calibration_draft"| State
     State -->|reads drafts| Cockpit
-    Cockpit -->|"approved_json"| State
+    Cockpit -->|"approved_json / rejected_json"| State
     State -->|polls| Deploy
     Deploy -->|"updateIncidentStatus, tags, save_document"| DataHub
     Deploy -->|writes new baseline| CalibFile
