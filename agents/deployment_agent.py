@@ -332,7 +332,8 @@ POLL_INTERVAL_SECONDS = 5
 
 async def run_deployment(session: ClientSession, gms_url: str, token: str) -> None:
     approved_files = sorted(STATE_DIR.glob("approved_*.json"))
-    pending = [p for p in approved_files if not json.loads(p.read_text()).get("deployed")]
+    rejected_files = sorted(STATE_DIR.glob("rejected_*.json"))
+    pending = [p for p in approved_files + rejected_files if not json.loads(p.read_text()).get("deployed")]
     if not pending:
         return
 

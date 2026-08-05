@@ -48,6 +48,10 @@ def approved_path(patient_id: str) -> Path:
     return STATE_DIR / f"approved_{patient_id}.json"
 
 
+def rejected_path(patient_id: str) -> Path:
+    return STATE_DIR / f"rejected_{patient_id}.json"
+
+
 def load_incident_queue() -> dict:
     if not INCIDENT_STATE_PATH.exists():
         return {}
@@ -69,15 +73,19 @@ def load_calibration_draft(patient_id: str) -> dict | None:
 
 
 def load_approved(patient_id: str) -> dict | None:
-    path = approved_path(patient_id)
-    if not path.exists():
-        return None
-    return json.loads(path.read_text())
+    
+    for path in (rejected_path(patient_id), approved_path(patient_id)):
+        if path.exists():
+            return json.loads(path.read_text())
+    return None
 
 
 def save_approved(payload: dict) -> Path:
     STATE_DIR.mkdir(exist_ok=True)
-    path = approved_path(payload["patient_id"])
+    if payload["status"] == "rejected":
+        path = rejected_path(payload["patient_id"])
+    else:
+        path = approved_path(payload["patient_id"])
     path.write_text(json.dumps(payload, indent=2))
     return path
 
