@@ -6,4 +6,4 @@ openai>=2.48.0
 python-dotenv>=1.2.2
 streamlit>=1.60.0
 uv>=0.12.1
-uv>=0.11.7
+acryl-datahub==1.6.0.15
