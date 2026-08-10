@@ -105,7 +105,8 @@ Each of the decoder's 8 channels has its own **preferred direction** — the mov
 
 One naming overlap worth flagging so it doesn't read as an inconsistency: the simulator's own first 60 trials of every session exist purely to set the *reference* distribution KL divergence is measured against — unrelated to the decoder's own calibration, which happens once, at trial 0, and never moves for the rest of the session. The Calibration Agent's "calibration window" is a different 60 trials again — the most recent ones, used only when a recalibration is actually being drafted.
 
-To be explicit, since it matters for a clinical-adjacent concept: this is a research prototype demonstrating a production-ML-monitoring pattern for BCI decoders, built entirely on synthetic telemetry — not software that touches a real neural implant or makes real clinical decisions.
+**Scope:** SynaptoFlow demonstrates a production-ML monitoring and recovery workflow for BCI decoders using entirely synthetic telemetry. It is not intended to interface with real neural implants or make clinical decisions.
+
 
 ---
 
@@ -187,7 +188,7 @@ curl -s "http://localhost:8080/entities/urn:li:mlModelDeployment:(urn:li:dataPla
   -H "Authorization: Bearer $DATAHUB_GMS_TOKEN" | python3 -m json.tool
 ```
 
-Look for the `com.linkedin.common.GlobalTags` aspect in the output. Before any incident: `drift-baseline` only. After a drift incident is resolved: `drift-baseline` plus either `resolution-ai-proposed` (Approve As-Is) or `resolution-human-modified` (Approve With Edits) — and `drift-drifted` genuinely absent either way, since that tag only exists while the incident is still open. If the proposal was rejected instead, the deployment stays tagged `drift-drifted` — expected, not a bug, since rejection intentionally leaves the incident open.
+Before any incident: `drift-baseline` only. After a drift incident is resolved: `drift-baseline` plus either `resolution-ai-proposed` (Approve As-Is) or `resolution-human-modified` (Approve With Edits) — and `drift-drifted` genuinely absent either way, since that tag only exists while the incident is still open. If the proposal was rejected instead, the deployment stays tagged `drift-drifted` — expected, not a bug, since rejection intentionally leaves the incident open.
 
 ---
 
