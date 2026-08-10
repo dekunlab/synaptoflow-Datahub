@@ -85,6 +85,9 @@ graph TD
 
 ---
 
+![Staging](examples/staging.gif)
+
+
 ## Proof it actually works — a real run against live DataHub
 
 This is `patient_07`, approved as-is through the cockpit, run against a real local DataHub instance. Four independent confirmations, not a single success line.
