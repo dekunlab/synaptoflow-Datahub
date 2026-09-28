@@ -12,4 +12,4 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
           -d "{\"content\": \"🌱 New good-first-issue: **${{ github.event.issue.title }}** — ${{ github.event.issue.html_url }}\"}" \
-          ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ${{ secrets.GOOD_FIRST_ISSUE_CHANNEL_WEBHOOK_URL }}
