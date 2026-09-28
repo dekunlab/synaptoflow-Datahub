@@ -1,4 +1,5 @@
 name: Notify Discord on Good First Issue
+
 on:
   issues:
     types: [labeled]
@@ -7,9 +8,41 @@ jobs:
   notify:
     if: github.event.label.name == 'good first issue'
     runs-on: ubuntu-latest
+
     steps:
       - name: Send Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.GOOD_FIRST_ISSUE_CHANNEL_WEBHOOK_URL }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_AVATAR: ${{ github.event.issue.user.avatar_url }}
         run: |
+          payload=$(jq -n \
+            --arg title "$ISSUE_TITLE" \
+            --arg url "$ISSUE_URL" \
+            --arg author "$ISSUE_AUTHOR" \
+            --arg avatar "$ISSUE_AVATAR" \
+            '{
+              username: "GitHub",
+              avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+              embeds: [
+                {
+                  title: "🌱 New Good First Issue",
+                  description: ("**" + $title + "**\n\n[View issue on GitHub](" + $url + ")"),
+                  url: $url,
+                  color: 5763719,
+                  thumbnail: {
+                    url: $avatar
+                  },
+                  footer: {
+                    text: ("Opened by " + $author)
+                  }
+                }
+              ]
+            }'
+          )
+
           curl -H "Content-Type: application/json" \
-          -d "{\"content\": \"🌱 New good-first-issue: **${{ github.event.issue.title }}** — ${{ github.event.issue.html_url }}\"}" \
-          ${{ secrets.GOOD_FIRST_ISSUE_CHANNEL_WEBHOOK_URL }}
+            -d "$payload" \
+            "$DISCORD_WEBHOOK"
